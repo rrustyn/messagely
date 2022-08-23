@@ -14,7 +14,7 @@ class User {
    */
 
   static async register({ username, password, first_name, last_name, phone }) {
-    
+
     const hashedPassword = await bcrypt.hash(password, BCRYPT_WORK_FACTOR);
     const result = await db.query(
       `INSERT INTO users (username,
