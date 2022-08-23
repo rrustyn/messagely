@@ -21,7 +21,7 @@ const { ensureLoggedIn } = require("../middleware/auth");
  **/
 router.get("/:id", ensureLoggedIn, async function(req, res, next){
   const message = await Message.get(req.params.id);
-  const username = res.local.user.username;
+  const username = res.locals.user.username;
 
   if(username === message.from_user ||
      username === message.from_user){
@@ -38,7 +38,7 @@ router.get("/:id", ensureLoggedIn, async function(req, res, next){
  *
  **/
 router.post("/", ensureLoggedIn, async function(req,res){
-  const username = res.local.user.username;
+  const username = res.locals.user.username;
   const r = req.body;
   return res.json(await Message.create(username, r.to_username, r.body));
 })
@@ -51,7 +51,7 @@ router.post("/", ensureLoggedIn, async function(req,res){
  *
  **/
 router.post("/:id/read",ensureLoggedIn, async function(req,res){
-  const username = res.local.user.username;
+  const username = res.locals.user.username;
   const message = await Message.get(req.params.id);
   if(username === message.to_username){
     return res.json(await Message.markRead(req.params.id));
