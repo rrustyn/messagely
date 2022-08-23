@@ -3,10 +3,7 @@
 const Router = require("express").Router;
 const router = new Router();
 const Message = require("../models/message");
-const {
-  ensureLoggedIn,
-  ensureCorrectUser,
-} = require("../middleware/auth");
+const { ensureLoggedIn } = require("../middleware/auth");
 
 
 
@@ -28,7 +25,7 @@ router.get("/:id", ensureLoggedIn, async function(req, res, next){
 
   if(username === message.from_user ||
      username === message.from_user){
-        return message;
+        return res.json(message);
      }
 
      //TODO? Should we throw an error
@@ -43,7 +40,7 @@ router.get("/:id", ensureLoggedIn, async function(req, res, next){
 router.post("/", ensureLoggedIn, async function(req,res){
   const username = res.local.user.username;
   const r = req.body;
-  return await Message.create(username, r.to_username, r.body);
+  return res.json(await Message.create(username, r.to_username, r.body));
 })
 
 /** POST/:id/read - mark message as read:
@@ -57,7 +54,7 @@ router.post("/:id/read",ensureLoggedIn, async function(req,res){
   const username = res.local.user.username;
   const message = await Message.get(req.params.id);
   if(username === message.to_username){
-    return await Message.markRead(req.params.id);
+    return res.json(await Message.markRead(req.params.id));
   }
 });
 
