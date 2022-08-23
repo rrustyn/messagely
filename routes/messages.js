@@ -4,6 +4,7 @@ const Router = require("express").Router;
 const router = new Router();
 const Message = require("../models/message");
 const { ensureLoggedIn } = require("../middleware/auth");
+const { UnauthorizedError } = require("../expressError");
 
 
 
@@ -19,17 +20,17 @@ const { ensureLoggedIn } = require("../middleware/auth");
  * Makes sure that the currently-logged-in users is either the to or from user.
  *
  **/
-router.get("/:id", ensureLoggedIn, async function(req, res, next){
+router.get("/:id", ensureLoggedIn, async function (req, res, next) {
   const message = await Message.get(req.params.id);
   const username = res.locals.user.username;
 
-  if(username === message.from_user ||
-     username === message.from_user){
-        return res.json(message);
-     }
-
-     //TODO? Should we throw an error
-})
+  if (username === message.from_user.username ||
+      username === message.to_user.username) {
+    return res.json(message);
+  }
+  
+  throw new UnauthorizedError();
+});
 
 /** POST / - post message.
  *
@@ -37,11 +38,17 @@ router.get("/:id", ensureLoggedIn, async function(req, res, next){
  *   {message: {id, from_username, to_username, body, sent_at}}
  *
  **/
-router.post("/", ensureLoggedIn, async function(req,res){
+router.post("/", ensureLoggedIn, async function (req, res) {
   const username = res.locals.user.username;
   const r = req.body;
-  return res.json(await Message.create(username, r.to_username, r.body));
-})
+  const message = await Message.create({
+    from_username: username,
+    to_username: r.to_username,
+    body: r.body
+  });
+  
+  return res.json({ message });
+});
 
 /** POST/:id/read - mark message as read:
  *
@@ -50,12 +57,16 @@ router.post("/", ensureLoggedIn, async function(req,res){
  * Makes sure that the only the intended recipient can mark as read.
  *
  **/
-router.post("/:id/read",ensureLoggedIn, async function(req,res){
+router.post("/:id/read", ensureLoggedIn, async function (req, res) {
   const username = res.locals.user.username;
-  const message = await Message.get(req.params.id);
-  if(username === message.to_username){
-    return res.json(await Message.markRead(req.params.id));
+  let message = await Message.get(req.params.id);
+
+  if (username === message.to_user.username) {
+    message = await Message.markRead(req.params.id);
+    return res.json({ message });
   }
+
+  throw new UnauthorizedError();
 });
 
 
