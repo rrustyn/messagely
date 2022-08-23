@@ -7,6 +7,18 @@ const { ensureLoggedIn } = require("../middleware/auth");
 const { UnauthorizedError } = require("../expressError");
 
 
+/** POST/SMS
+ * 
+ * => {message: {twilio stuff}}
+ * 
+ */
+ router.post("/SMS", async function (req, res) {
+  const message = req.body.message;
+  
+  const resp = await Message.sendSMS(message);
+  
+  return res.json({SMS : resp});
+})
 
 /** GET /:id - get detail of message.
  *
@@ -68,6 +80,7 @@ router.post("/:id/read", ensureLoggedIn, async function (req, res) {
 
   throw new UnauthorizedError();
 });
+
 
 
 module.exports = router;
